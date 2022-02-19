@@ -8,16 +8,22 @@ resource "aws_ecs_cluster" "keycloak" {
 }
 
 resource "aws_ecs_service" "keycloak" {
-  name            = "keycloak"
-  cluster         = aws_ecs_cluster.keycloak.id
-  task_definition = aws_ecs_task_definition.keycloak.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  name                              = "keycloak"
+  cluster                           = aws_ecs_cluster.keycloak.id
+  task_definition                   = aws_ecs_task_definition.keycloak.arn
+  desired_count                     = 1
+  launch_type                       = "FARGATE"
+  health_check_grace_period_seconds = 600
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.ecs.arn
+    container_name   = "keycloak"
+    container_port   = 8443
+  }
 
   network_configuration {
-    security_groups  = [aws_security_group.inbound_to_keycloak.id]
-    subnets          = module.vpc.public_subnet_ids
-    assign_public_ip = true
+    security_groups = [aws_security_group.keycloak.id, module.keycloak_db.proxy_security_group_id]
+    subnets         = module.vpc.public_subnet_ids
   }
 }
 
@@ -35,11 +41,14 @@ resource "aws_ecs_task_definition" "keycloak" {
   container_definitions = jsonencode([
     {
       "name" : "keycloak",
-      "command" : ["start-dev"],
       "cpu" : 0,
       "environment" : [
         {
           "name" : "DB_DATABASE",
+          "value" : "keycloak"
+        },
+        {
+          "name" : "DB_NAME",
           "value" : "keycloak"
         },
         {
@@ -57,6 +66,10 @@ resource "aws_ecs_task_definition" "keycloak" {
         {
           "name" : "DB_SCHEMA",
           "value" : "public"
+        },
+        {
+          "name" : "JDBC_PARAMS",
+          "value" : "useSSL=true"
         }
       ],
       "essential" : true,
@@ -71,18 +84,34 @@ resource "aws_ecs_task_definition" "keycloak" {
       },
       "portMappings" : [
         {
-          "hostPort" : 8080,
-          "protocol" : "tcp",
-          "containerPort" : 8080
+          "hostPort" : 8443,
+          "ContainerPort" : 8443,
+          "Protocol" : "tcp"
+        },
+        {
+          "ContainerPort" : 7600,
+          "Protocol" : "tcp"
+        },
+        {
+          "ContainerPort" : 57600,
+          "Protocol" : "tcp"
+        },
+        {
+          "ContainerPort" : 55200,
+          "Protocol" : "udp"
+        },
+        {
+          "ContainerPort" : 54200,
+          "Protocol" : "udp"
         }
       ],
       "secrets" : [
         {
-          "name" : "KEYCLOAK_ADMIN",
+          "name" : "KEYCLOAK_USER",
           "valueFrom" : aws_ssm_parameter.keycloak_admin_user.arn
         },
         {
-          "name" : "KEYCLOAK_ADMIN_PASSWORD",
+          "name" : "KEYCLOAK_PASSWORD",
           "valueFrom" : aws_ssm_parameter.keycloak_admin_password.arn
         },
         {
@@ -90,7 +119,7 @@ resource "aws_ecs_task_definition" "keycloak" {
           "valueFrom" : aws_ssm_parameter.keycloak_db_user.arn
         },
         {
-          "name" : "DB_PWD",
+          "name" : "DB_PASSWORD",
           "valueFrom" : aws_ssm_parameter.keycloak_db_password.arn
         }
       ],

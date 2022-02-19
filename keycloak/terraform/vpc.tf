@@ -4,7 +4,7 @@ locals {
 
 module "vpc" {
   source = "github.com/cds-snc/terraform-modules?ref=v1.0.5//vpc"
-  name   = "${var.product_name}_vpc"
+  name   = var.product_name
 
   high_availability = true
   enable_flow_log   = false
@@ -64,25 +64,25 @@ resource "aws_network_acl_rule" "ephemeral_ports_egress" {
 # CREATE A SECURITY GROUP TO ALLOW ACCESS TO KEYCLOAK
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "aws_security_group" "inbound_to_keycloak" {
-  name        = "inbound_to_keycloak"
-  description = "Allow inbound traffic to keycloak"
+resource "aws_security_group" "keycloak" {
+  name        = "keycloak"
+  description = "Allow inbound traffic to keycloak load balancer"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description = "Access to keycloak"
-    from_port   = 8080
-    to_port     = 8080
+    description = "Access to load balancer"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    description = "Access to TLS"
-    from_port   = 443
-    to_port     = 443
+    description = "Access to keycloak"
+    from_port   = 8443
+    to_port     = 8443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 }
 

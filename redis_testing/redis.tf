@@ -1,14 +1,3 @@
-resource "random_password" "redis_token" {
-  length  = 16
-  special = false
-}
-
-resource "aws_ssm_parameter" "redis_token" {
-  name  = "redis_token"
-  type  = "String"
-  value = random_password.redis_token.result
-}
-
 module "vpc" {
   source = "github.com/cds-snc/terraform-modules?ref=v1.0.5//vpc"
   name   = "${var.product_name}_vpc"
@@ -23,19 +12,16 @@ module "vpc" {
   billing_tag_value = var.billing_code
 }
 
-resource "aws_elasticache_replication_group" "redis" {
-  replication_group_id          = "${var.product_name}-demo"
-  replication_group_description = "Redis cluster for caching storage (has automatic eviction)"
-  engine                        = "redis"
-  node_type                     = "cache.t2.micro"
-  number_cache_clusters         = 1
-  parameter_group_name          = "default.redis6.x"
-  engine_version                = "6.x"
-  transit_encryption_enabled    = true
-  auth_token                    = random_password.redis_token.result
-  port                          = 6379
-  security_group_ids            = [aws_security_group.inbound_to_redis.id]
-  subnet_group_name             = aws_elasticache_subnet_group.redis.name
+resource "aws_elasticache_cluster" "redis" {
+  cluster_id           = "${var.product_name}-demo"
+  engine               = "redis"
+  node_type            = "cache.t2.micro"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.redis6.x"
+  engine_version       = "6.x"
+  port                 = 6379
+  security_group_ids   = [aws_security_group.inbound_to_redis.id]
+  subnet_group_name    = aws_elasticache_subnet_group.redis.name
 }
 
 ####
@@ -90,7 +76,7 @@ resource "aws_network_acl_rule" "ephemeral_ports_egress" {
 
 resource "aws_elasticache_subnet_group" "redis" {
   name       = "${var.product_name}-redis"
-  subnet_ids = module.vpc.public_subnet_ids
+  subnet_ids = module.vpc.private_subnet_ids
 }
 
 resource "aws_security_group" "inbound_to_redis" {
@@ -99,6 +85,28 @@ resource "aws_security_group" "inbound_to_redis" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
+    description = "Access to redis"
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.cidr_block]
+  }
+
+  egress {
+    description = "Access to TLS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "sg_for_lambda" {
+  name        = "sg_for_lambda"
+  description = "Allow traffic for lambda"
+  vpc_id      = module.vpc.vpc_id
+
+  egress {
     description = "Access to redis"
     from_port   = 6379
     to_port     = 6379

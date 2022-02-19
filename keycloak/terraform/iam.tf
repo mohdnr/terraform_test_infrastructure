@@ -16,6 +16,11 @@ data "aws_iam_policy_document" "task_execution_role" {
 
     principals {
       type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    principals {
+      type        = "Service"
       identifiers = ["ecs-tasks.amazonaws.com"]
     }
   }
@@ -30,6 +35,12 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_policies" {
   role       = aws_iam_role.task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy"
 }
+
+resource "aws_iam_role_policy_attachment" "container_registery_policies" {
+  role       = aws_iam_role.task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
 
 resource "aws_iam_role_policy_attachment" "keycloak_policies" {
   role       = aws_iam_role.task_execution_role.name
