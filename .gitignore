@@ -2,3 +2,6 @@
 terraform.tfstate*
 .env
 dist
+.build
+*-layer.zip
+__pycache__

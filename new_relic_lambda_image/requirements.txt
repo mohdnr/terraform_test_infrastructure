@@ -1,0 +1,6 @@
+boto3==1.17.*
+aws-wsgi==0.2.7
+Flask==1.1.2
+newrelic==6.2.0.156
+Werkzeug==1.0.1
+itsdangerous==0.24  # pyup: <1.0.0
