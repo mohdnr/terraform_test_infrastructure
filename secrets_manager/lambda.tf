@@ -1,3 +1,9 @@
+locals {
+  lambda_environment_variables = {
+    FOO  = "newbar"
+    TEST = "lmno pqrs tuvw"
+  }
+}
 data "archive_file" "lambda_zip" {
   source_dir  = "src/dist"
   output_path = "/tmp/lambda.zip"
@@ -19,7 +25,7 @@ resource "aws_lambda_function" "secret_lambda" {
   role          = aws_iam_role.lambda.arn
 
   environment {
-    variables = jsondecode(data.aws_secretsmanager_secret_version.current.secret_string)
+    variables = sensitive(merge(jsondecode(data.aws_secretsmanager_secret_version.current.secret_string), local.lambda_environment_variables))
   }
 
   tracing_config {
