@@ -33,9 +33,3 @@ resource "aws_ssm_parameter" "buzzfeed_sso_client_secret" {
   type  = "String"
   value = var.buzzfeed_sso_client_secret
 }
-
-resource "aws_ssm_parameter" "buzzfeed_sso_sso_credentials" {
-  name  = "buzzfeed_sso_sso_credentials"
-  type  = "String"
-  value = var.buzzfeed_sso_sso_credentials
-}

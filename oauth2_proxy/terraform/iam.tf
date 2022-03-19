@@ -78,7 +78,6 @@ data "aws_iam_policy_document" "buzzfeed_sso_policies" {
       aws_ssm_parameter.session_cookie_secret.arn,
       aws_ssm_parameter.buzzfeed_sso_client_id.arn,
       aws_ssm_parameter.buzzfeed_sso_client_secret.arn,
-      aws_ssm_parameter.buzzfeed_sso_sso_credentials.arn,
     ]
   }
 }

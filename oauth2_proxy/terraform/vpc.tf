@@ -64,6 +64,7 @@ resource "aws_security_group" "buzzfeed_sso" {
   description = "Allow inbound traffic to buzzfeed_sso load balancer"
   vpc_id      = module.vpc.vpc_id
 
+
   ingress {
     description = "Access to load balancer"
     from_port   = 443
@@ -77,6 +78,14 @@ resource "aws_security_group" "buzzfeed_sso" {
     from_port   = 4180
     to_port     = 4180
     protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Allow API outbound connections to the internet"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "TCP"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -117,6 +126,14 @@ resource "aws_security_group" "internal_apps" {
   name        = "internal_apps"
   description = "Allow inbound traffic to internal_apps"
   vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description     = "Access from proxy"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.buzzfeed_sso.id]
+  }
 
   ingress {
     description     = "Access from proxy"

@@ -41,7 +41,7 @@ resource "aws_ecs_task_definition" "internal_apps" {
       "cpu" : 0,
       "environment" : [],
       "essential" : true,
-      "image" : "httpd:2.4",
+      "image" : "tutum/hello-world:latest",
       "logConfiguration" : {
         "logDriver" : "awslogs",
         "options" : {

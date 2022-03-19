@@ -40,30 +40,6 @@ resource "aws_ecs_task_definition" "buzzfeed_sso_auth" {
 
   container_definitions = jsonencode([
     {
-      "entryPoint" : [
-        "bash",
-        "-c",
-        "set -ueo pipefail; mkdir -p /sso/; echo ${var.buzzfeed_sso_sso_credentials} | base64 -d > /sso/credentials.json",
-      ],
-      "mountPoints" : [
-        {
-          "containerPath" : "/sso",
-          "sourceVolume" : "buzzfeed_sso_config"
-        }
-      ],
-      "image" : "public.ecr.aws/docker/library/bash:5",
-      "readonlyRootFilesystem" : false
-      "privileged" : false
-      "essential" : false
-      "name" : "init-sso"
-    },
-    {
-      "dependsOn" : [
-        {
-          "containerName" : "init-sso"
-          "condition" : "SUCCESS"
-        }
-      ],
       "name" : "buzzfeed_sso_auth",
       "cpu" : 0,
       "environment" : [
@@ -72,12 +48,8 @@ resource "aws_ecs_task_definition" "buzzfeed_sso_auth" {
           "value" : "cds-snc.ca"
         },
         {
-          "name" : "PROVIDER_GOOGLE_GOOGLE_CREDENTIALS",
-          "value" : "/sso/credentials.json"
-        },
-        {
           "name" : "AUTHORIZE_PROXY_DOMAINS",
-          "value" : "*"
+          "value" : "${var.domain_name},auth.${var.domain_name},httpd.${var.domain_name}"
         },
         {
           "name" : "SERVER_SCHEME",
@@ -170,9 +142,6 @@ resource "aws_ecs_task_definition" "buzzfeed_sso_auth" {
       ],
     },
   ])
-  volume {
-    name = "buzzfeed_sso_config"
-  }
 }
 
 resource "aws_cloudwatch_log_group" "buzzfeed_sso_auth" {

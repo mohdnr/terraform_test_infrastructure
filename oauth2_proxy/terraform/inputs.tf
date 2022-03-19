@@ -53,10 +53,3 @@ variable "buzzfeed_sso_google_client_secret" {
   type        = string
   sensitive   = true
 }
-
-variable "buzzfeed_sso_sso_credentials" {
-  description = "The buzzfeed_sso google sso service account credentials"
-  type        = string
-  sensitive   = true
-}
-
