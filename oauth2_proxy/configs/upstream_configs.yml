@@ -1,0 +1,4 @@
+- service: httpd
+  default:
+    from: httpd.internal.cdssandbox.xyz
+    to: http://httpd.internal.local
