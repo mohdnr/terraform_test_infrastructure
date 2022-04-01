@@ -78,7 +78,7 @@
       },
       "Catch": [{"ErrorEquals": [ "States.ALL" ], "ResultPath": null, "Next": "SetupNextStep"}],
       "ResultPath": null,
-      "Next": "get-account"
+      "Next": "Done"
     },
     "delete-account": {
       "Type": "Task",
