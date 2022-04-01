@@ -1,0 +1,138 @@
+{
+  "Version": "1.0",
+  "Comment": "CDS Developer Community of Practise demo",
+  "TimeoutSeconds": 60,
+  "StartAt": "get-account",
+  "States": {
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.account",
+          "IsPresent": false,
+          "Next": "Done"
+        },
+        {
+          "Variable": "$.account.state",
+          "StringMatches": "payment_late",
+          "Next": "send-reminder"
+        },
+        {
+          "Variable": "$.account.state",
+          "StringMatches": "reminder_sent",
+          "Next": "check-if-paid"
+        },
+        {
+          "Variable": "$.account.state",
+          "StringMatches": "paid",
+          "Next": "delete-account"
+        },
+        {
+          "Variable": "$.account.state",
+          "StringMatches": "closed",
+          "Next": "Done"
+        }
+      ],
+      "Default": "Done"
+    },
+    "SetupNextStep": {
+      "Type": "Pass",
+      "Parameters": {
+        "payload.$": "$.payload[1:$.payload.ItemsCount]"
+      },
+      "Next": "Choice",
+      "ResultPath": "$"
+    },
+    "Done": {
+      "Type": "Pass",
+      "End": true
+    },
+    "get-account": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${account_lambda}",
+        "Payload": {
+          "task": "get_account",
+          "Input.$": "$",
+          "execution_id.$": "$$.Execution.Id"
+        }
+      },
+      "Catch": [{"ErrorEquals": [ "States.ALL" ], "ResultPath": null, "Next": "Done"}],
+      "ResultSelector": {
+        "account.$": "States.StringToJson($.Payload)"
+      },
+      "ResultPath": "$",
+      "Next": "Choice"
+    },
+    "update-account": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${account_lambda}",
+        "Payload": {
+          "task": "update_account",
+          "Input.$": "$",
+          "execution_id.$": "$$.Execution.Id"
+        }
+      },
+      "Catch": [{"ErrorEquals": [ "States.ALL" ], "ResultPath": null, "Next": "SetupNextStep"}],
+      "ResultPath": null,
+      "Next": "get-account"
+    },
+    "delete-account": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${account_lambda}",
+        "Payload": {
+          "task": "delete_account",
+          "Input.$": "$",
+          "execution_id.$": "$$.Execution.Id"
+        }
+      },
+      "Catch": [{"ErrorEquals": [ "States.ALL" ], "ResultPath": null, "Next": "SetupNextStep"}],
+      "ResultSelector": {
+        "account.$": "States.StringToJson($.Payload)"
+      },
+      "ResultPath": "$",
+      "Next": "Choice"
+    },
+    "send-reminder": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${workflow_lambda}",
+        "Payload": {
+          "task": "send_reminder",
+          "Input.$": "$",
+          "execution_id.$": "$$.Execution.Id"
+        }
+      },
+      "Catch": [{"ErrorEquals": [ "States.ALL" ], "ResultPath": null, "Next": "SetupNextStep"}],
+      "ResultSelector": {
+        "account.$": "$.Payload"
+      },
+      "ResultPath": "$",
+      "Next": "update-account"
+    },
+    "check-if-paid": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${workflow_lambda}",
+        "Payload": {
+          "task": "check_payment",
+          "Input.$": "$",
+          "execution_id.$": "$$.Execution.Id"
+        }
+      },
+      "Catch": [{"ErrorEquals": [ "States.ALL" ], "ResultPath": null, "Next": "SetupNextStep"}],
+      "ResultSelector": {
+        "account.$": "$.Payload"
+      },
+      "ResultPath": "$",
+      "Next": "update-account"
+    }
+  }
+}
