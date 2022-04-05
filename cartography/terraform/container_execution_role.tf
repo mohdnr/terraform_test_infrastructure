@@ -14,6 +14,15 @@ resource "aws_iam_role_policy_attachment" "ce_cs" {
   policy_arn = data.aws_iam_policy.ec2_container_service.arn
 }
 
+data "aws_iam_policy" "security_audit" {
+  name = "SecurityAudit"
+}
+
+resource "aws_iam_role_policy_attachment" "security_audit" {
+  role       = aws_iam_role.container_execution_role.name
+  policy_arn = data.aws_iam_policy.security_audit.arn
+}
+
 ###
 # Policy Documents
 ###

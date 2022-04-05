@@ -1,3 +1,8 @@
+locals {
+  private_ip_cidr = [for s in data.aws_subnet.private : s.cidr_block]
+  public_ip_cidr  = [for s in data.aws_subnet.public : s.cidr_block]
+}
+
 module "vpc" {
   source = "github.com/cds-snc/terraform-modules?ref=v1.0.5//vpc"
   name   = var.product_name
@@ -10,6 +15,16 @@ module "vpc" {
 
   billing_tag_key   = "CostCentre"
   billing_tag_value = var.billing_code
+}
+
+data "aws_subnet" "private" {
+  for_each = toset(module.vpc.private_subnet_ids)
+  id       = each.value
+}
+
+data "aws_subnet" "public" {
+  for_each = toset(module.vpc.public_subnet_ids)
+  id       = each.value
 }
 
 resource "aws_network_acl_rule" "https" {
@@ -34,9 +49,20 @@ resource "aws_network_acl_rule" "ephemeral_ports" {
   to_port        = 65535
 }
 
+resource "aws_network_acl_rule" "http_egress" {
+  network_acl_id = module.vpc.main_nacl_id
+  rule_number    = 112
+  egress         = true
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 80
+  to_port        = 80
+}
+
 resource "aws_network_acl_rule" "https_egress" {
   network_acl_id = module.vpc.main_nacl_id
-  rule_number    = 110
+  rule_number    = 113
   egress         = true
   protocol       = "tcp"
   rule_action    = "allow"
@@ -47,7 +73,7 @@ resource "aws_network_acl_rule" "https_egress" {
 
 resource "aws_network_acl_rule" "ephemeral_ports_egress" {
   network_acl_id = module.vpc.main_nacl_id
-  rule_number    = 111
+  rule_number    = 114
   egress         = true
   protocol       = "tcp"
   rule_action    = "allow"
@@ -64,19 +90,45 @@ resource "aws_security_group" "cartography" {
   description = "Allow inbound traffic to cartography load balancer"
   vpc_id      = module.vpc.vpc_id
 
+  ingress {
+    description = "Access to load balancer neo4j"
+    from_port   = 7474
+    to_port     = 7474
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
-    description = "Allow outbound connections to the internet"
+    description = "Allow outbound http connections to the internet"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "TCP"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Allow outbound https connections to the internet"
     from_port   = 443
     to_port     = 443
     protocol    = "TCP"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Access to neo4j http"
+  egress {
+    description = "Outbound access to neo4j http"
     from_port   = 7474
     to_port     = 7474
     protocol    = "tcp"
+    cidr_blocks = local.private_ip_cidr
+    self        = true
+  }
+
+  ingress {
+    description = "Inbound access to neo4j http"
+    from_port   = 7474
+    to_port     = 7474
+    protocol    = "tcp"
+    cidr_blocks = local.public_ip_cidr
     self        = true
   }
 
@@ -85,22 +137,25 @@ resource "aws_security_group" "cartography" {
     from_port   = 7473
     to_port     = 7473
     protocol    = "tcp"
+    cidr_blocks = local.public_ip_cidr
     self        = true
   }
 
   egress {
-    description = "Access to neo4j bolt"
+    description = "Outbound access to neo4j bolt"
     from_port   = 7687
     to_port     = 7687
     protocol    = "tcp"
+    cidr_blocks = local.private_ip_cidr
     self        = true
   }
 
   ingress {
-    description = "Access to neo4j bolt"
+    description = "Inbound access to neo4j bolt"
     from_port   = 7687
     to_port     = 7687
     protocol    = "tcp"
+    cidr_blocks = local.public_ip_cidr
     self        = true
   }
 }

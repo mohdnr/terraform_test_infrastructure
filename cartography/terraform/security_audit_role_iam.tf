@@ -25,13 +25,13 @@ data "aws_iam_policy_document" "asset_inventory_role" {
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::028051698106:role/container_execution_role"]
+      identifiers = ["arn:aws:iam::028051698106:role/cartography_execution_role"]
     }
   }
 }
 
 data "aws_iam_policy" "read_only" {
-  name = "ReadOnlyAccess"
+  name = "SecurityAudit"
 }
 
 resource "aws_iam_role_policy_attachment" "read_only" {

@@ -4,8 +4,7 @@
 resource "aws_lb" "cartography" {
   name               = "cartography"
   internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.cartography.id]
+  load_balancer_type = "network"
   subnets            = module.vpc.public_subnet_ids
 
   drop_invalid_header_fields = true
@@ -15,21 +14,10 @@ resource "aws_lb" "cartography" {
 resource "aws_lb_target_group" "ecs" {
   name                 = "ecs"
   port                 = 7474
-  protocol             = "HTTP"
+  protocol             = "TCP"
   target_type          = "ip"
   deregistration_delay = 30
   vpc_id               = module.vpc.vpc_id
-
-  health_check {
-    protocol            = "HTTP"
-    path                = ""
-    port                = "traffic-port"
-    timeout             = 10
-    healthy_threshold   = 2
-    unhealthy_threshold = 10
-    interval            = 15
-    matcher             = "200-399"
-  }
 
   tags = {
     billing_tag_key   = "CostCentre"
@@ -37,13 +25,26 @@ resource "aws_lb_target_group" "ecs" {
   }
 }
 
+resource "aws_lb_target_group" "bolt" {
+  name                 = "bolt"
+  port                 = 7687
+  protocol             = "TCP"
+  target_type          = "ip"
+  deregistration_delay = 30
+  vpc_id               = module.vpc.vpc_id
+
+  tags = {
+    billing_tag_key   = "CostCentre"
+    billing_tag_value = var.billing_code
+  }
+}
+
+
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.cartography.arn
 
-  port            = 443
-  protocol        = "HTTPS"
-  ssl_policy      = "ELBSecurityPolicy-2016-08"
-  certificate_arn = aws_acm_certificate.self_signed_cert.arn
+  port     = 7474
+  protocol = "TCP"
 
   default_action {
     type             = "forward"
@@ -51,7 +52,13 @@ resource "aws_lb_listener" "https" {
   }
 }
 
-resource "aws_lb_listener_certificate" "https_sni" {
-  listener_arn    = aws_lb_listener.https.arn
-  certificate_arn = aws_acm_certificate.self_signed_cert.arn
+resource "aws_lb_listener" "bolt" {
+  load_balancer_arn = aws_lb.cartography.arn
+
+  port     = 7687
+  protocol = "TCP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.bolt.arn
+  }
 }

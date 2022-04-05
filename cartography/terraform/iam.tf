@@ -76,6 +76,19 @@ data "aws_iam_policy_document" "cartography_policies" {
       aws_ssm_parameter.neo4j_password.arn,
     ]
   }
+
+  statement {
+
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+    ]
+    resources = [
+      "arn:aws:s3:::packages.*.amazonaws.com/*",
+      "arn:aws:s3:::repo.*.amazonaws.com/*"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "cartography_policies" {

@@ -21,6 +21,12 @@ resource "aws_ecs_service" "neo4j" {
     container_port   = 7474
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.bolt.arn
+    container_name   = "neo4j"
+    container_port   = 7687
+  }
+
   service_registries {
     registry_arn = aws_service_discovery_service.neo4j.arn
   }
@@ -36,8 +42,8 @@ resource "aws_ecs_task_definition" "neo4j" {
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
 
-  cpu    = 2048
-  memory = 4096
+  cpu    = 4096
+  memory = 16384
 
   execution_role_arn = aws_iam_role.container_execution_role.arn
   task_role_arn      = aws_iam_role.task_execution_role.arn
@@ -49,15 +55,15 @@ resource "aws_ecs_task_definition" "neo4j" {
       "environment" : [
         {
           "name" : "NEO4J_dbms_memory_pagecache_size",
-          "value" : "1G"
+          "value" : "4G"
         },
         {
           "name" : "NEO4J_dbms.memory.heap.initial_size",
-          "value" : "1G"
+          "value" : "4G"
         },
         {
           "name" : "NEO4J_dbms_memory_heap_max__size",
-          "value" : "1G"
+          "value" : "4G"
         },
         {
           "name" : "NEO4J_ACCEPT_LICENSE_AGREEMENT",

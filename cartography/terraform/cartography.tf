@@ -1,5 +1,6 @@
 locals {
-  aws_config_file = "../configs/roles"
+  aws_config_file   = "../configs/roles"
+  aws_config_script = "../configs/setup_credentials.sh"
 }
 
 resource "aws_ecs_cluster" "cartography" {
@@ -49,7 +50,7 @@ resource "aws_ecs_task_definition" "cartography" {
       "entryPoint" : [
         "bash",
         "-c",
-        "set -ueo pipefail; mkdir -p /config/; echo ${base64encode(file(local.aws_config_file))} | base64 -d > /config/role_config; cat /config/role_config",
+        "set -ueo pipefail; mkdir -p /config/; echo ${base64encode(file(local.aws_config_file))} | base64 -d > /config/role_config; echo ${base64encode(file(local.aws_config_script))} | base64 -d > /config/setup_credentials.sh; chmod +x /config/setup_credentials.sh; cat /config/setup_credentials.sh; cat /config/role_config",
       ],
       "logConfiguration" : {
         "logDriver" : "awslogs",
@@ -72,9 +73,43 @@ resource "aws_ecs_task_definition" "cartography" {
       "name" : "init-cartography"
     },
     {
+      "entryPoint" : [
+        "/config/setup_credentials.sh"
+      ],
+      "logConfiguration" : {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.init_cartography.name,
+          "awslogs-region" : var.region,
+          "awslogs-stream-prefix" : "ecs-init_cartography"
+        }
+      },
+      "mountPoints" : [
+        {
+          "containerPath" : "/config",
+          "sourceVolume" : "cartography_config"
+        },
+        {
+          "containerPath" : "~/.aws",
+          "sourceVolume" : "aws_config"
+        }
+      ],
+      "image" : "public.ecr.aws/amazonlinux/amazonlinux:latest",
+      "readonlyRootFilesystem" : false
+      "privileged" : false
+      "essential" : false
       "dependsOn" : [
         {
           "containerName" : "init-cartography"
+          "condition" : "SUCCESS"
+        }
+      ],
+      "name" : "init-aws-config"
+    },
+    {
+      "dependsOn" : [
+        {
+          "containerName" : "init-aws-config"
           "condition" : "SUCCESS"
         }
       ],
@@ -96,6 +131,16 @@ resource "aws_ecs_task_definition" "cartography" {
         },
       ],
       "essential" : true,
+      "mountPoints" : [
+        {
+          "containerPath" : "/config",
+          "sourceVolume" : "cartography_config"
+        },
+        {
+          "containerPath" : "~/.aws",
+          "sourceVolume" : "aws_config"
+        }
+      ],
       "image" : "williamjackson/cartography",
       "logConfiguration" : {
         "logDriver" : "awslogs",
@@ -123,6 +168,10 @@ resource "aws_ecs_task_definition" "cartography" {
 
   volume {
     name = "cartography_config"
+  }
+
+  volume {
+    name = "aws_config"
   }
 }
 
