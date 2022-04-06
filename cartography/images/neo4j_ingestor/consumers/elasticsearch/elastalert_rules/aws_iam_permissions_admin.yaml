@@ -1,0 +1,40 @@
+name: "[Cartography] New Principal with Admin Permissions Detected"
+description: "A new Principal with root-like permissions has been detected."
+use_ssl: True
+
+# Query:
+#   metadata.query_name:"iam_permissions_admin"
+index: transform-iam-permissions-admin-cartography-max-min
+type: any
+filter:
+  - query_string:
+      query: "_type:_doc"
+num_events: 1
+timestamp_field: "@timestamp.min"
+timeframe:
+  hours: 1
+realert:
+  hours: 50
+query_key:
+  - "a.id"
+  - "a.name"
+  - "p.name"
+  - "policy.name"
+
+alert_text: |
+  Elastalert Alert:  Cartography detected new values in the query iam_permissions_admin. Account: {1} [{0}] - Principal name: {2} - Policy name: {3}.
+alert_text_args:
+  - "a.id"
+  - "a.name"
+  - "p.name"
+  - "policy.name"
+alert_text_type: alert_text_only
+alert:
+  - slack:
+      slack_webhook_url: __slack_webhook_url.security-notifications__
+  - jira:
+      jira_server: https://jira.server.com
+      jira_project: PROJECT
+      jira_components: COMPONENT
+      jira_issuetype: Vulnerability
+      jira_account_file: jira-credentials.yaml

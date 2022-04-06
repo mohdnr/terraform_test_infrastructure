@@ -1,6 +1,5 @@
 locals {
-  aws_config_file   = "../configs/roles"
-  aws_config_script = "../configs/setup_credentials.sh"
+  aws_config_file = "../configs/roles"
 }
 
 resource "aws_ecs_cluster" "cartography" {
@@ -47,101 +46,28 @@ resource "aws_ecs_task_definition" "cartography" {
 
   container_definitions = jsonencode([
     {
-      "entryPoint" : [
-        "bash",
-        "-c",
-        "set -ueo pipefail; mkdir -p /config/; echo ${base64encode(file(local.aws_config_file))} | base64 -d > /config/role_config; echo ${base64encode(file(local.aws_config_script))} | base64 -d > /config/setup_credentials.sh; chmod +x /config/setup_credentials.sh; cat /config/setup_credentials.sh; cat /config/role_config",
-      ],
-      "logConfiguration" : {
-        "logDriver" : "awslogs",
-        "options" : {
-          "awslogs-group" : aws_cloudwatch_log_group.init_cartography.name,
-          "awslogs-region" : var.region,
-          "awslogs-stream-prefix" : "ecs-init_cartography"
-        }
-      },
-      "mountPoints" : [
-        {
-          "containerPath" : "/config",
-          "sourceVolume" : "cartography_config"
-        }
-      ],
-      "image" : "public.ecr.aws/docker/library/bash:5",
-      "readonlyRootFilesystem" : false
-      "privileged" : false
-      "essential" : false
-      "name" : "init-cartography"
-    },
-    {
-      "entryPoint" : [
-        "/config/setup_credentials.sh"
-      ],
-      "logConfiguration" : {
-        "logDriver" : "awslogs",
-        "options" : {
-          "awslogs-group" : aws_cloudwatch_log_group.init_cartography.name,
-          "awslogs-region" : var.region,
-          "awslogs-stream-prefix" : "ecs-init_cartography"
-        }
-      },
-      "mountPoints" : [
-        {
-          "containerPath" : "/config",
-          "sourceVolume" : "cartography_config"
-        },
-        {
-          "containerPath" : "~/.aws",
-          "sourceVolume" : "aws_config"
-        }
-      ],
-      "image" : "public.ecr.aws/amazonlinux/amazonlinux:latest",
-      "readonlyRootFilesystem" : false
-      "privileged" : false
-      "essential" : false
-      "dependsOn" : [
-        {
-          "containerName" : "init-cartography"
-          "condition" : "SUCCESS"
-        }
-      ],
-      "name" : "init-aws-config"
-    },
-    {
-      "dependsOn" : [
-        {
-          "containerName" : "init-aws-config"
-          "condition" : "SUCCESS"
-        }
-      ],
       "name" : "cartography",
-      "command" : [
-        "--neo4j-uri",
-        "bolt://neo4j.internal.local:7687",
-        "--neo4j-user",
-        "neo4j",
-        "--neo4j-password-env-var",
-        "NEO4J_PASSWORD",
-        "--aws-sync-all-profiles"
-      ],
       "cpu" : 0,
       "environment" : [
         {
           "name" : "AWS_CONFIG_FILE",
           "value" : "/config/role_config"
         },
-      ],
-      "essential" : true,
-      "mountPoints" : [
         {
-          "containerPath" : "/config",
-          "sourceVolume" : "cartography_config"
+          "name" : "AWS_PROFILE_DATA",
+          "value" : "${base64encode(file(local.aws_config_file))}"
         },
         {
-          "containerPath" : "~/.aws",
-          "sourceVolume" : "aws_config"
-        }
+          "name" : "NEO4J_URI",
+          "value" : "bolt://neo4j.internal.local:7687"
+        },
+        {
+          "name" : "NEO4J_USER",
+          "value" : "neo4j"
+        },
       ],
-      "image" : "williamjackson/cartography",
+      "essential" : true,
+      "image" : "${aws_ecr_repository.cartography.repository_url}:latest",
       "logConfiguration" : {
         "logDriver" : "awslogs",
         "options" : {
@@ -159,28 +85,15 @@ resource "aws_ecs_task_definition" "cartography" {
       ],
       "secrets" : [
         {
-          "name" : "NEO4J_PASSWORD",
+          "name" : "NEO4J_SECRETS_PASSWORD",
           "valueFrom" : aws_ssm_parameter.neo4j_password.arn
         }
       ],
     },
   ])
-
-  volume {
-    name = "cartography_config"
-  }
-
-  volume {
-    name = "aws_config"
-  }
 }
 
 resource "aws_cloudwatch_log_group" "cartography" {
   name              = "/aws/ecs/cartography"
-  retention_in_days = 14
-}
-
-resource "aws_cloudwatch_log_group" "init_cartography" {
-  name              = "/aws/ecs/init_cartography"
   retention_in_days = 14
 }

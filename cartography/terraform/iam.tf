@@ -74,6 +74,8 @@ data "aws_iam_policy_document" "cartography_policies" {
     resources = [
       aws_ssm_parameter.neo4j_auth.arn,
       aws_ssm_parameter.neo4j_password.arn,
+      aws_ssm_parameter.elasticsearch_user.arn,
+      aws_ssm_parameter.elasticsearch_password.arn,
     ]
   }
 

@@ -1,10 +1,5 @@
-locals {
-  private_ip_cidr = [for s in data.aws_subnet.private : s.cidr_block]
-  public_ip_cidr  = [for s in data.aws_subnet.public : s.cidr_block]
-}
-
 module "vpc" {
-  source = "github.com/cds-snc/terraform-modules?ref=v1.0.5//vpc"
+  source = "github.com/cds-snc/terraform-modules?ref=v2.0.1//vpc"
   name   = var.product_name
 
   high_availability = true
@@ -15,16 +10,6 @@ module "vpc" {
 
   billing_tag_key   = "CostCentre"
   billing_tag_value = var.billing_code
-}
-
-data "aws_subnet" "private" {
-  for_each = toset(module.vpc.private_subnet_ids)
-  id       = each.value
-}
-
-data "aws_subnet" "public" {
-  for_each = toset(module.vpc.public_subnet_ids)
-  id       = each.value
 }
 
 resource "aws_network_acl_rule" "https" {
@@ -119,7 +104,7 @@ resource "aws_security_group" "cartography" {
     from_port   = 7474
     to_port     = 7474
     protocol    = "tcp"
-    cidr_blocks = local.private_ip_cidr
+    cidr_blocks = module.vpc.private_subnet_cidr_blocks
     self        = true
   }
 
@@ -128,7 +113,7 @@ resource "aws_security_group" "cartography" {
     from_port   = 7474
     to_port     = 7474
     protocol    = "tcp"
-    cidr_blocks = local.public_ip_cidr
+    cidr_blocks = module.vpc.public_subnet_cidr_blocks
     self        = true
   }
 
@@ -137,7 +122,7 @@ resource "aws_security_group" "cartography" {
     from_port   = 7473
     to_port     = 7473
     protocol    = "tcp"
-    cidr_blocks = local.public_ip_cidr
+    cidr_blocks = module.vpc.public_subnet_cidr_blocks
     self        = true
   }
 
@@ -146,7 +131,7 @@ resource "aws_security_group" "cartography" {
     from_port   = 7687
     to_port     = 7687
     protocol    = "tcp"
-    cidr_blocks = local.private_ip_cidr
+    cidr_blocks = module.vpc.private_subnet_cidr_blocks
     self        = true
   }
 
@@ -155,7 +140,25 @@ resource "aws_security_group" "cartography" {
     from_port   = 7687
     to_port     = 7687
     protocol    = "tcp"
-    cidr_blocks = local.public_ip_cidr
+    cidr_blocks = module.vpc.public_subnet_cidr_blocks
+    self        = true
+  }
+
+  egress {
+    description = "Outbound access to elasticsearch"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = module.vpc.private_subnet_cidr_blocks
+    self        = true
+  }
+
+  ingress {
+    description = "Inbound access to elasticsearch"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = module.vpc.public_subnet_cidr_blocks
     self        = true
   }
 }
