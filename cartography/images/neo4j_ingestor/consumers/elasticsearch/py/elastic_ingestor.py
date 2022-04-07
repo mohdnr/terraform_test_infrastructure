@@ -144,8 +144,8 @@ def main():
     ingestor.push_results(queries_results)
 
     # Queries - Azure
-    queries_results = ingestor.query_by_tag(['azure'])
-    ingestor.push_results(queries_results)
+    # queries_results = ingestor.query_by_tag(['azure'])
+    # ingestor.push_results(queries_results)
 
     logger.info("Ingestion completed successfully")
 

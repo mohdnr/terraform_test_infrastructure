@@ -33,10 +33,10 @@ resource "aws_elasticsearch_domain" "cartography" {
     volume_size = 25
   }
 
-  vpc_options {
-    security_group_ids = [aws_security_group.cartography.id]
-    subnet_ids         = [module.vpc.public_subnet_ids[0]]
-  }
+  # vpc_options {
+  #   security_group_ids = [aws_security_group.cartography.id]
+  #   subnet_ids         = [module.vpc.public_subnet_ids[0]]
+  # }
 }
 
 resource "aws_elasticsearch_domain_policy" "main" {
@@ -49,6 +49,9 @@ resource "aws_elasticsearch_domain_policy" "main" {
               "Action": "es:*",
               "Principal": "*",
               "Effect": "Allow",
+              "Principal": {
+                "AWS": "*"
+              },
               "Resource": "${aws_elasticsearch_domain.cartography.arn}/*"
           }
       ]

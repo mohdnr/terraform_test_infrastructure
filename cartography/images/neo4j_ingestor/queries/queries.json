@@ -680,7 +680,7 @@
           "list"
       ],
       "description": "List of EBSVolumes by AWSAccount",
-      "query": "MATCH (a:AWSAccount)-[:RESOURCE]->(v:EBSVolume) RETURN ",
+      "query": "MATCH (a:AWSAccount)-[:RESOURCE]->(v:EBSVolume) WHERE v.createtime IS NOT NULL RETURN ",
       "return": "a.name, a.id, v.id, v.type, v.state, v.encrypted, v.size, v.region, v.createtime ORDER BY a.name, v.state",
       "result_headers": [
           "account_name",
