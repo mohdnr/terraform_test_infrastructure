@@ -36,3 +36,9 @@ resource "aws_ssm_parameter" "elasticsearch_password" {
   type  = "String"
   value = random_password.elasticsearch_password.result
 }
+
+resource "aws_ssm_parameter" "asset_inventory_account_list" {
+  name  = "asset_inventory_account_list"
+  type  = "StringList"
+  value = chomp(replace(file("../configs/accounts.txt"), "\"", ""))
+}

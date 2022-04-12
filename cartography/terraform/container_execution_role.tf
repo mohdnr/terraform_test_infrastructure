@@ -52,6 +52,11 @@ data "aws_iam_policy_document" "container_execution_role" {
       type        = "Service"
       identifiers = ["states.${var.region}.amazonaws.com"]
     }
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.lambda.arn]
+    }
   }
 }
 

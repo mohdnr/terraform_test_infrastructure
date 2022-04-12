@@ -1,5 +1,5 @@
-[profile mohamed-scratch]
-role_arn = arn:aws:iam::028051698106:role/AssetInventoryRole
+[profile ###]
+role_arn = arn:aws:iam::###:role/AssetInventoryRole
 source_profile = default
 region = ca-central-1
 output = json
