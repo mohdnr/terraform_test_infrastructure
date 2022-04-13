@@ -75,6 +75,22 @@ resource "aws_security_group" "cartography" {
   description = "Allow inbound traffic to cartography load balancer"
   vpc_id      = module.vpc.vpc_id
 
+  egress {
+    description = "Access to efs"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = module.vpc.private_subnet_cidr_blocks
+  }
+
+  ingress {
+    description = "Access to efs"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = module.vpc.private_subnet_cidr_blocks
+  }
+
   ingress {
     description = "Access to load balancer neo4j"
     from_port   = 7474

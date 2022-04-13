@@ -29,6 +29,10 @@ def handler(event, context):
               "name" : "cartography",
               'environment': [
                   {
+                    'name': 'AWS_ACCOUNT',
+                    'value': account_id
+                  },
+                  {
                     'name': 'AWS_CONFIG_FILE',
                     'value': '/config/role_config'
                   },
