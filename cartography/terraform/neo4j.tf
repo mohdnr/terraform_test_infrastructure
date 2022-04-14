@@ -11,7 +11,7 @@ resource "aws_ecs_service" "neo4j" {
   name                              = "neo4j"
   cluster                           = aws_ecs_cluster.neo4j.id
   task_definition                   = aws_ecs_task_definition.neo4j.arn
-  desired_count                     = 2
+  desired_count                     = 1
   launch_type                       = "FARGATE"
   health_check_grace_period_seconds = 600
 
@@ -54,10 +54,6 @@ resource "aws_ecs_task_definition" "neo4j" {
       "cpu" : 0,
       "environment" : [
         {
-          "name" : "NEO4J_dbms.connector.bolt.advertised_address",
-          "value" : "neo4j.internal.local:7687"
-        },
-        {
           "name" : "NEO4J_dbms_memory_pagecache_size",
           "value" : "4G"
         },
@@ -72,7 +68,7 @@ resource "aws_ecs_task_definition" "neo4j" {
         {
           "name" : "NEO4J_ACCEPT_LICENSE_AGREEMENT",
           "value" : "yes"
-        },
+        }
       ],
       "essential" : true,
       "image" : "neo4j:3.5",
@@ -87,10 +83,18 @@ resource "aws_ecs_task_definition" "neo4j" {
       },
       "mountPoints" : [
         {
-          "sourceVolume" : "neo4j-ebs-volume",
-          "containerPath" : "$HOME/data"
+          "sourceVolume" : "neo4j-efs-volume",
+          "containerPath" : "/var/lib/neo4j/data",
+          "readOnly" : false
         }
-      ]
+      ],
+      "ulimits" : [
+        {
+          "name" : "nofile",
+          "softLimit" : 400000,
+          "hardLimit" : 400000
+        }
+      ],
       "portMappings" : [
         {
           "hostPort" : 7474,
@@ -118,7 +122,7 @@ resource "aws_ecs_task_definition" "neo4j" {
   ])
 
   volume {
-    name = "neo4j-ebs-volume"
+    name = "neo4j-efs-volume"
     efs_volume_configuration {
       file_system_id = aws_efs_file_system.neo4j.id
     }
