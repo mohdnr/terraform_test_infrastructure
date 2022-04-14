@@ -11,7 +11,7 @@ resource "aws_ecs_service" "neo4j" {
   name                              = "neo4j"
   cluster                           = aws_ecs_cluster.neo4j.id
   task_definition                   = aws_ecs_task_definition.neo4j.arn
-  desired_count                     = 1
+  desired_count                     = length(local.trusted_role_arns)
   launch_type                       = "FARGATE"
   health_check_grace_period_seconds = 600
 
@@ -42,8 +42,8 @@ resource "aws_ecs_task_definition" "neo4j" {
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
 
-  cpu    = 4096
-  memory = 16384
+  cpu    = 2048
+  memory = 8192
 
   execution_role_arn = aws_iam_role.container_execution_role.arn
   task_role_arn      = aws_iam_role.task_execution_role.arn
@@ -72,7 +72,6 @@ resource "aws_ecs_task_definition" "neo4j" {
       ],
       "essential" : true,
       "image" : "neo4j:3.5",
-      "ephemeralStorage" : { "sizeInGiB" : 50 }
       "logConfiguration" : {
         "logDriver" : "awslogs",
         "options" : {
@@ -81,13 +80,6 @@ resource "aws_ecs_task_definition" "neo4j" {
           "awslogs-stream-prefix" : "ecs-neo4j"
         }
       },
-      "mountPoints" : [
-        {
-          "sourceVolume" : "neo4j-efs-volume",
-          "containerPath" : "/var/lib/neo4j/data",
-          "readOnly" : false
-        }
-      ],
       "ulimits" : [
         {
           "name" : "nofile",
@@ -120,13 +112,6 @@ resource "aws_ecs_task_definition" "neo4j" {
       ],
     }
   ])
-
-  volume {
-    name = "neo4j-efs-volume"
-    efs_volume_configuration {
-      file_system_id = aws_efs_file_system.neo4j.id
-    }
-  }
 }
 
 resource "aws_cloudwatch_log_group" "neo4j" {

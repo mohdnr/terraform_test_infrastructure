@@ -87,4 +87,17 @@ data "aws_iam_policy_document" "lambda" {
       aws_ssm_parameter.asset_inventory_account_list.arn,
     ]
   }
+
+  statement {
+
+    effect = "Allow"
+
+    actions = [
+      "servicediscovery:ListServices",
+      "servicediscovery:ListInstances",
+    ]
+    resources = [
+      "arn:aws:servicediscovery:${var.region}:${var.account_id}:*/*"
+    ]
+  }
 }
