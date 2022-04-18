@@ -21,7 +21,7 @@ resource "aws_sfn_state_machine" "asset_inventory_cartography" {
         "Get running cartography services from previous run" : {
           "Type" : "Task",
           "Parameters" : {
-            "Cluster" : "cartography"
+            "Cluster" : aws_ecs_cluster.cartography.name
           },
           "Resource" : "arn:aws:states:::aws-sdk:ecs:listTasks",
           "Next" : "Is previous cartography still running"
