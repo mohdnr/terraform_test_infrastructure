@@ -11,28 +11,6 @@ resource "aws_ecs_cluster" "neo4j_ingestor" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "neo4j_ingestor" {
-  name                = "neo4j_ingestor"
-  schedule_expression = "cron(0 8 * * ? *)"
-}
-
-resource "aws_cloudwatch_event_target" "neo4j_ingestor" {
-  rule      = aws_cloudwatch_event_rule.neo4j_ingestor.name
-  target_id = "neo4j_ingestor"
-  arn       = aws_ecs_cluster.neo4j_ingestor.arn
-  role_arn  = aws_iam_role.container_execution_role.arn
-  ecs_target {
-    launch_type         = "FARGATE"
-    platform_version    = "LATEST"
-    task_count          = 1
-    task_definition_arn = aws_ecs_task_definition.neo4j_ingestor.arn
-    network_configuration {
-      security_groups = [aws_security_group.cartography.id]
-      subnets         = module.vpc.private_subnet_ids
-    }
-  }
-}
-
 resource "aws_ecs_task_definition" "neo4j_ingestor" {
   family                   = "neo4j_ingestor"
   network_mode             = "awsvpc"

@@ -11,35 +11,13 @@ resource "aws_ecs_cluster" "cartography" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "event_rule" {
-  name                = "cartography"
-  schedule_expression = "cron(0 5 * * ? *)"
-}
-
-resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
-  rule      = aws_cloudwatch_event_rule.event_rule.name
-  target_id = "cartography"
-  arn       = aws_ecs_cluster.cartography.arn
-  role_arn  = aws_iam_role.container_execution_role.arn
-  ecs_target {
-    launch_type         = "FARGATE"
-    platform_version    = "LATEST"
-    task_count          = 1
-    task_definition_arn = aws_ecs_task_definition.cartography.arn
-    network_configuration {
-      security_groups = [aws_security_group.cartography.id]
-      subnets         = module.vpc.private_subnet_ids
-    }
-  }
-}
-
 resource "aws_ecs_task_definition" "cartography" {
   family                   = "cartography"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
 
-  cpu    = 2048
-  memory = 4096
+  cpu    = 4096
+  memory = 16384
 
   execution_role_arn = aws_iam_role.container_execution_role.arn
   task_role_arn      = aws_iam_role.task_execution_role.arn

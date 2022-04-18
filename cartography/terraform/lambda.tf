@@ -1,21 +1,21 @@
 #
 # Lambda: zip
 #
-data "archive_file" "lambda_zip" {
+data "archive_file" "cartography_launcher" {
   type        = "zip"
   source_file = "../images/runner/lambda.py"
-  output_path = "/tmp/lambda.py.zip"
+  output_path = "/tmp/cartography_launcher.py.zip"
 }
 
-resource "aws_lambda_function" "lambda_zip" {
-  filename      = "/tmp/lambda.py.zip"
-  function_name = "lambda_zip"
+resource "aws_lambda_function" "cartography_launcher" {
+  filename      = "/tmp/cartography_launcher.py.zip"
+  function_name = "cartography_launcher"
   handler       = "lambda.handler"
   runtime       = "python3.8"
   timeout       = 10
   role          = aws_iam_role.lambda.arn
 
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  source_code_hash = data.archive_file.cartography_launcher.output_base64sha256
 
   environment {
     variables = {

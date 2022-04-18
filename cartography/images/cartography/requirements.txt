@@ -63,7 +63,7 @@ botocore==1.20.98
     #   s3transfer
 cachetools==4.2.2
     # via google-auth
-cartography==0.54.0
+cartography==0.57.0rc2
     # via -r requirements.in
 certifi==2021.5.30
     # via

@@ -11,7 +11,7 @@ resource "aws_ecs_service" "neo4j" {
   name                              = "neo4j"
   cluster                           = aws_ecs_cluster.neo4j.id
   task_definition                   = aws_ecs_task_definition.neo4j.arn
-  desired_count                     = length(local.trusted_role_arns)
+  desired_count                     = 1
   launch_type                       = "FARGATE"
   health_check_grace_period_seconds = 600
 
