@@ -6,6 +6,8 @@ mkdir -p ~/.aws/
 
 echo $AWS_PROFILE_DATA | base64 -d > /config/role_config
 
+cat /config/role_config
+
 cat <<EOF >> /config/role_config
 
 [default]
@@ -16,7 +18,6 @@ aws_secret_access_key=$(jq -r '.SecretAccessKey' aws_credentials.json)
 aws_session_token=$(jq -r '.Token' aws_credentials.json)
 EOF
 
-cat /config/role_config
-echo "AWS configuration complete"
+echo "AWS configuration complete, launching cartography"
 
 cartography --neo4j-uri ${NEO4J_URI} --neo4j-user ${NEO4J_USER} --neo4j-password-env-var NEO4J_SECRETS_PASSWORD --aws-sync-all-profiles
