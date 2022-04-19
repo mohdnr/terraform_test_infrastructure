@@ -1,6 +1,10 @@
 module "vpc" {
-  source = "github.com/cds-snc/terraform-modules?ref=v2.0.1//vpc"
+  source = "github.com/cds-snc/terraform-modules?ref=v2.0.2//vpc"
   name   = "${var.product_name}-1"
+
+  cidr            = "172.16.0.0/16"
+  public_subnets  = ["172.16.0.0/20", "172.16.16.0/20", "172.16.32.0/20"]
+  private_subnets = ["172.16.128.0/20", "172.16.144.0/20", "172.16.160.0/20"]
 
   high_availability = true
   enable_flow_log   = false
@@ -10,11 +14,6 @@ module "vpc" {
 
   billing_tag_key   = "CostCentre"
   billing_tag_value = var.billing_code
-}
-
-resource "aws_vpc_ipv4_cidr_block_association" "account_2_cidr" {
-  vpc_id     = module.vpc.vpc_id
-  cidr_block = "172.1.0.0/16"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

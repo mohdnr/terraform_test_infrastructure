@@ -1,5 +1,5 @@
 module "vpc" {
-  source = "github.com/cds-snc/terraform-modules?ref=v2.0.1//vpc"
+  source = "github.com/cds-snc/terraform-modules?ref=v2.0.2//vpc"
   name   = "${var.product_name}-2"
 
   high_availability = true
@@ -12,10 +12,10 @@ module "vpc" {
   billing_tag_value = var.billing_code
 }
 
-resource "aws_vpc_ipv4_cidr_block_association" "account_1_cidr" {
-  vpc_id     = module.vpc.vpc_id
-  cidr_block = "172.2.0.0/16"
-}
+# resource "aws_vpc_ipv4_cidr_block_association" "account_1_cidr" {
+#   vpc_id     = module.vpc.vpc_id
+#   cidr_block = "172.2.0.0/16"
+# }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # NETWORK ACCESS CONTROL LISTS
