@@ -44,15 +44,46 @@ resource "aws_ecs_task_definition" "dependency_track_api" {
         },
         {
           "name" : "ALPINE_DATABASE_URL",
-          "value" : module.dependency_track_db.proxy_endpoint
+          "value" : "jdbc:postgresql://${module.dependency_track_db.proxy_endpoint}:5432/dtrack"
         },
         {
           "name" : "ALPINE_DATABASE_DRIVER",
           "value" : "org.postgresql.Driver"
+        },
+        {
+          "name" : "ALPINE_DATABASE_DRIVER_PATH",
+          "value" : "/extlib/postgresql-42.2.5.jar"
+        },
+        {
+          "name" : "ALPINE_DATABASE_POOL_ENABLED",
+          "value" : "true"
+        },
+        {
+          "name" : "ALPINE_DATABASE_POOL_MAX_SIZE",
+          "value" : "20"
+        },
+        {
+          "name" : "ALPINE_DATABASE_POOL_MIN_IDLE",
+          "value" : "10"
+        },
+        {
+          "name" : "ALPINE_DATABASE_POOL_IDLE_TIMEOUT",
+          "value" : "300000"
+        },
+        {
+          "name" : "ALPINE_DATABASE_POOL_MAX_LIFETIME",
+          "value" : "600000"
         }
       ],
       "essential" : true,
       "image" : "dependencytrack/apiserver:latest",
+      "mountPoints" : [
+        {
+          "sourceVolume" : local.dependency_track_api_service_name,
+          "containerPath" : "/data",
+          "readOnly" : false
+        }
+      ],
       "logConfiguration" : {
         "logDriver" : "awslogs",
         "options" : {
@@ -80,6 +111,20 @@ resource "aws_ecs_task_definition" "dependency_track_api" {
       ],
     }
   ])
+
+  volume {
+    name = local.dependency_track_api_service_name
+    efs_volume_configuration {
+      file_system_id     = aws_efs_file_system.dependency_track.id
+      root_directory     = "/"
+      transit_encryption = "ENABLED"
+
+      authorization_config {
+        access_point_id = aws_efs_access_point.dependency_track.id
+        iam             = "DISABLED"
+      }
+    }
+  }
 }
 
 resource "aws_cloudwatch_log_group" "dependency_track_api" {

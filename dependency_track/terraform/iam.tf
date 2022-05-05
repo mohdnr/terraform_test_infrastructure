@@ -76,6 +76,18 @@ data "aws_iam_policy_document" "dependency_track_policies" {
       aws_ssm_parameter.dependency_track_db_password.arn,
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "elasticfilesystem:ClientWrite",
+      "elasticfilesystem:ClientMount",
+      "elasticfilesystem:DescribeMountTargets",
+    ]
+    resources = [
+      aws_efs_file_system.dependency_track.arn
+    ]
+  }
 }
 
 resource "aws_iam_policy" "dependency_track_policies" {

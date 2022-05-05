@@ -1,6 +1,6 @@
 resource "random_password" "dependency_track_db_password" {
   length  = 32
-  special = true
+  special = false
 }
 
 resource "random_string" "dependency_track_db_user" {

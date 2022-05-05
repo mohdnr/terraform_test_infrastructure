@@ -3,7 +3,7 @@ locals {
 }
 
 module "vpc" {
-  source = "github.com/cds-snc/terraform-modules?ref=v1.0.5//vpc"
+  source = "github.com/cds-snc/terraform-modules?ref=v2.0.1//vpc"
   name   = var.product_name
 
   high_availability = true
@@ -78,6 +78,30 @@ resource "aws_security_group" "dependency_track" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     self        = true
+  }
+
+  egress {
+    description = "Access to RDS Postgresql"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = module.vpc.private_subnet_cidr_blocks
+  }
+
+  egress {
+    description = "Access to efs"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = module.vpc.private_subnet_cidr_blocks
+  }
+
+  ingress {
+    description = "Access to efs"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = module.vpc.private_subnet_cidr_blocks
   }
 }
 
