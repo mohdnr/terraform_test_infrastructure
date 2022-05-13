@@ -1,0 +1,105 @@
+# Regions to remove resources from
+regions:
+- "global"
+- "us-east-1"
+- "ca-central-1"
+
+# Only delete resources from accounts that do not match LandingZone filters
+accounts:
+  "028051698106":
+    filters:
+      CloudFormationStack:
+        - propery: Name
+          type: regex
+          value: ".*(Landing-?Zone|cloud-based-sensor).*"
+      CloudTrailTrail:
+        - propery: Name
+          type: regex
+          value: "(.*Landing-?Zone.*|CbsSatelliteTrail)"
+      CloudWatchAlarm:
+        - propery: TargetId
+          type: regex
+          value: "(CloudTrail.*|IAMPolicyChanges|RootLogin|Cbs.*|cbs-.*|secops.*)"
+      CloudWatchEventsTarget:
+        - propery: Name
+          type: regex
+          value: ".*Landing-?Zone.*"
+      CloudWatchLogsLogGroup:
+        - propery: ARN
+          type: regex
+          value: "(.*Landing-?Zone|Cbs|cbs-|secops).*"
+      DynamoDBTable:
+        - propery: TableName
+          type: regex
+          value: "tfstate-lock"
+      DynamoDBTableItem:
+        - propery: TableName
+          type: regex
+          value: "tfstate-lock"        
+      IAMPolicy:
+        - propery: PolicyName
+          type: regex
+          value: "(cbs-|Cbs|ConfigTerraform|secops).*"
+      IAMRole:
+        - propery: Name
+          type: regex
+          value: "(Landing-?Zone|AWSReservedSSO|CloudFormation|Cbs.*|cbs-.*|ConfigTerraform.*|secops.*)"
+      IAMRolePolicy:
+        - propery: RoleName
+          type: regex
+          value: "(Landing-?Zone|AWSReservedSSO|CloudFormation|Cbs.*|cbs-.*|secops.*)"
+      IAMRolePolicyAttachment:
+        - propery: RoleName
+          type: regex
+          value: "(Landing-?Zone|AWSReservedSSO|Cbs.*|cbs-.*|ConfigTerraform.*|secops.*)"
+      LambdaFunction:
+        - propery: Name
+          type: regex
+          value: "(.*Landing-?Zone|Cbs|cbs-|secops).*"
+      S3Bucket:
+        - propery: BucketName
+          type: regex
+          value: "(cbs-|secops).*"
+      S3Object:
+        - propery: BucketName
+          type: regex
+          value: "(cbs-|secops).*"
+      SNSSubscription:
+        - propery: ARN
+          type: regex
+          value: ".*(Landing-?Zone|Cbs|cbs-|secops).*"
+      SNSTopic:
+        - propery: TopicARN
+          type: regex
+          value: ".*(Landing-?Zone|Cbs|cbs-|secops).*"
+      SSMParameter:
+        - propery: Name
+          type: regex
+          value: "(.*local_sns_arn|secops).*"
+
+# Do not delete any of the following resource types
+resource-types:
+  excludes:
+    - CloudWatchEventsRule
+    - ConfigServiceConfigRule
+    - ConfigServiceDeliveryChannel
+    - ConfigServiceConfigurationRecorder
+    - EC2DHCPOption
+    - ElasticacheCacheParameterGroup
+    - FMSPolicy
+    - FMSNotificationChannel
+    - GuardDutyDetector
+    - IAMUserAccessKey
+    - IAMUserPolicyAttachment
+    - IAMLoginProfile
+    - IAMOpenIDConnectProvider
+    - IAMSAMLProvider
+    - IAMUser
+    - KMSAlias
+    - KMSKey
+    - OpsWorksUserProfile
+    - SecurityHub
+
+# Accounts that will not have resources removed
+account-blocklist:
+

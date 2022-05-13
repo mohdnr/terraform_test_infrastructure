@@ -5,7 +5,7 @@
     "context": "..",
     "args": {
       "TERRAFORM_VERSION": "1.1.4",
-      "AWS_CLI_VERSION": "2.2.29",
+      "AWS_CLI_VERSION": "2.6.3",
       "TERRAGRUNT_VERSION": "0.36.0"
     }
   },
@@ -22,6 +22,11 @@
 			"version": "latest",
 			"moby": true
 		},
+		"kubectl-helm-minikube": {
+			"version": "latest",
+			"helm": "latest",
+			"minikube": "none"
+		}
 	},
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
