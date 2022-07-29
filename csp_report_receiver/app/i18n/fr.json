@@ -1,0 +1,14 @@
+{
+  "all_domains": "tous les domaines",
+  "alpha_banner": "Ce site évoluera au fur et à mesure que nous testons des idées.",
+  "domain": "domain",
+  "document_uri": "document URI",
+  "filter_reports": "filter reports",
+  "referrer":"referrer",
+  "violated_directive":"violated directive",
+  "original_policy":"original policy",
+  "blocked_uri":"blocked URI",
+  "language_code": "fr",
+  "other_language": "English",
+  "other_language_code": "en"
+}
