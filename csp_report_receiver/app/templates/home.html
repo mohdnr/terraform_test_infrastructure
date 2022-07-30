@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% block title %}
-Reports
+{{t("csp_reports")|title}}
 {% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-2">
+
+<form id="form"  action="/filter/domain" method="post">
+<div class="gc-homepage-compact flex gap-4">
 <div>
-<form id="form" action="/filter/domain" method="post">
-<select name="domain" value="{{ domain_filter }}" class="px-7 py-4 rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0 text-md">
+<select name="domain" value="{{ domain_filter }}" class="px-7 py-3.5 rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0 text-md">
   <option value="">{{t("all_domains")|title}}</option>
   @for domain in domains
   <option id="{{ domain.id }}" value="{{ domain.name }}" {% if domain_filter==domain.name %} selected="selected"{% endif %}>{{ domain.name }}</option>
@@ -18,8 +19,8 @@ Reports
   <input type="hidden" name="page" value="{{page}}" />
   <button class="gc-button">{{t("filter_reports")|title}}</button>
 </div>
-</form>
 </div>
+</form>
 
 <div class="report-list relative overflow-x-auto shadow-md sm:rounded-lg">
   <table id="report-table" class="min-w-full">

@@ -386,6 +386,11 @@ main {
     /* max-width: 75ch */
 }
 
+.gc-homepage-compact div {
+  margin-bottom: 0rem;
+  /* max-width: 75ch */
+}
+
 @media (max-width:550px) {
     .gc-homepage div {
         margin-bottom: 3rem
@@ -393,7 +398,12 @@ main {
 }
 
 .gc-homepage div:last-of-type {
-    margin-bottom: 5rem
+    margin-bottom: 3rem
+}
+
+.gc-homepage-compact div:last-of-type {
+  margin-bottom: 0rem;
+  /* max-width: 75ch */
 }
 
 @media (max-width:550px) {

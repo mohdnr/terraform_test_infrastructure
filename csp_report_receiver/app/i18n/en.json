@@ -1,6 +1,7 @@
 {
   "all_domains": "all domains",
   "alpha_banner": "This site will change as we test ideas.",
+  "csp_reports": "content security policy reports",
   "domain": "domain",
   "document_uri": "document URI",
   "filter_reports": "filter reports",
